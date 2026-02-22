@@ -1,9 +1,58 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Birthday Card</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Card Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <h1>Happy Birthday!</h1>
-    <p>Wishing you a day filled with love and happiness.</p>
+    <header>
+        <h1>Birthday Card Generator</h1>
+        <audio controls>
+            <source src="friends_theme_song.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </header>
+    <form id="card-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required>
+        <label for="age">Age:</label>
+        <input type="number" id="age" required>
+        <label for="hobby">Hobby:</label>
+        <input type="text" id="hobby" required>
+        <label for="relationship">Relationship:</label>
+        <input type="text" id="relationship" required>
+        <button type="submit">Generate Card</button>
+    </form>
+    <div id="card" class="card hidden">
+        <h2>Happy Birthday <span id="card-name"></span>!</h2>
+        <p>Age: <span id="card-age"></span></p>
+        <p>Hobby: <span id="card-hobby"></span></p>
+        <p>Relationship: <span id="card-relationship"></span></p>
+        <button id="copy-message">Copy Message</button>
+    </div>
+    <script>
+        const form = document.getElementById('card-form');
+        const card = document.getElementById('card');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const hobby = document.getElementById('hobby').value;
+            const relationship = document.getElementById('relationship').value;
+            document.getElementById('card-name').innerText = name;
+            document.getElementById('card-age').innerText = age;
+            document.getElementById('card-hobby').innerText = hobby;
+            document.getElementById('card-relationship').innerText = relationship;
+            card.classList.remove('hidden');
+        });
+        document.getElementById('copy-message').addEventListener('click', function() {
+            const message = `Happy Birthday ${document.getElementById('card-name').innerText}!`;
+            navigator.clipboard.writeText(message);
+            alert('Message copied to clipboard!');
+        });
+    </script>
 </body>
 </html>
