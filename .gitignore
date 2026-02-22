@@ -1,0 +1,15 @@
+# .gitignore for Birthday Card Generator
+
+# Node.js dependencies
+node_modules/
+
+# Build output
+/dist/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
