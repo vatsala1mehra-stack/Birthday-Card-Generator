@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birthday Card Buddy</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,Arial,sans-serif;
+  background:#0f1014;
+}
+
+/* HEADER */
+header{
+  text-align:center;
+  padding:20px;
+  background:#c4b5fd;
+  font-family:'Amatic SC',cursive;
+  font-size:42px;
+  color:#1f2937;
+}
+header img{
+  max-width:160px;
+  display:block;
+  margin:0 auto 6px;
+}
+
+/* LAYOUT */
+.container{
+  display:flex;
+  gap:20px;
+  padding:20px;
+  max-width:1400px;
+  margin:0 auto;
+}
+
+.panel{
+  background:#fff;
+  border-radius:18px;
+  padding:24px;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+}
+
+/* PANELS */
+.left{
+  flex:1;               /* 1/3 */
+  max-width:33%;
+}
+
+.right{
+  flex:2;               /* 2/3 */
+  max-width:67%;
+}
+
+/* FORM */
+form{display:grid;gap:12px}
+input,select,button{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1.5px solid #ccc;
+}
+button{
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+}
+.primary{background:#3b82f6;color:#fff}
+.lucky{background:transparent;color:#3b82f6;border:2px solid #3b82f6}
+
+/* CARD STRIP */
+.cards-row{
+  display:flex;
+  gap:20px;
+  overflow-x:auto;
+  padding-bottom:14px;
+  scroll-snap-type:x mandatory;
+}
+
+/* CARD */
+.card{
+  flex:0 0 auto;
+  width:420px;          /* restored wider card */
+  height:280px;
+  border-radius:22px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 12px 30px rgba(0,0,0,.15);
+  background:#000;
+  scroll-snap-align:start;
+}
+
+.card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* OPEN BUTTON */
+.open-btn{
+  position:absolute;
+  bottom:16px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  border-radius:20px;
+  padding:10px 18px;
+  font-size:14px;
+}
+
+/* MESSAGE */
+.message{
+  position:absolute;
+  inset:0;
+  background:#faf7ff;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  transform:translateY(100%);
+  transition:transform .5s ease;
+}
+
+.card.open .message{
+  transform:translateY(0);
+}
+
+.message p{
+  margin:0;
+  font-size:15px;
+  line-height:1.45;
+  overflow-y:auto;
+}
+
+.audio-player{
+  width:100%;
+}
+
+.copy{
+  align-self:flex-start;
+  padding:7px 14px;
+  border-radius:12px;
+  border:1px solid #aaa;
+  background:#fff;
+  cursor:pointer;
+  font-size:13px;
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .container{flex-direction:column}
+  .left,.right{max-width:100%}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Friends_logo.svg">
+  <div>Birthday Card Buddy</div>
+</header>
+
+<div class="container">
+
+<div class="panel left">
+<form id="form">
+  <input id="nameInput" placeholder="Name" required>
+  <input id="ageInput" type="number" placeholder="Age" required>
+  <input id="hobbyInput" placeholder="Hobby" required>
+  <select id="relInput" required>
+    <option value="">Relationship</option>
+    <option value="friend">Friend</option>
+    <option value="sibling">Sibling</option>
+    <option value="parent">Parent</option>
+    <option value="spouse">Spouse</option>
+    <option value="coworker">Coworker</option>
+  </select>
+  <button class="primary">Create Birthday Card</button>
+  <button type="button" class="lucky" id="lucky">I'm Feeling Lucky</button>
+</form>
+</div>
+
+<div class="panel right">
+  <h3 style="text-align:center;margin-top:0">Your Cards</h3>
+  <div class="cards-row" id="cards"></div>
+</div>
+
+</div>
+
+<script>
+const cards=document.getElementById("cards");
+function rand(a){return a[Math.floor(Math.random()*a.length)]}
+
+let lastUsed={opener:null,age:null,hobby:null,relation:null,closer:null};
+function pickUnique(pool,key){
+  let choices=pool.filter(p=>p!==lastUsed[key]);
+  if(!choices.length) choices=pool;
+  const choice=rand(choices);
+  lastUsed[key]=choice;
+  return choice;
+}
+
+const openers=[
+  "Could this day BE any more iconic?",
+  "This birthday feels like a season finale.",
+  "Another year older, still stealing the spotlight.",
+  "Today deserves applause, cake, and zero regrets."
+];
+
+const ageLines=[
+  a=>`At ${a}, you're aging like Joey — fearless and math-optional.`,
+  a=>`${a} candles? Chandler would panic.`,
+  a=>`${a} looks good on you. Ross would overthink it.`
+];
+
+const hobbyLines=[
+  h=>`May your ${h} bring joy like Central Perk coffee.`,
+  h=>`If ${h} were an episode, it’d be a fan favorite.`,
+  h=>`Your love for ${h} is officially binge-worthy.`
+];
+
+const relationshipLines={
+  friend:["You’re my real-life Friends episode.","Chosen family always wins."],
+  sibling:["Sibling energy: chaotic but loyal.","Like Monica & Ross — iconic."],
+  parent:["Parenting level: Monica-organized, Phoebe-fun.","You nailed the hardest role."],
+  spouse:["You’re my lobster. End of debate.","Love like this deserves cake."],
+  coworker:["Let’s PIVOT into a better year.","HR approves this celebration."]
+};
+
+const closers=[
+  "Cake is mandatory. Pants are optional.",
+  "Calories don’t count today. Science agrees.",
+  "Eat cake first. Decisions later.",
+  "Today’s forecast: 100% chance of dessert.",
+  "Another year survived — cake required."
+];
+
+function buildMessage(n,a,h,r){
+  return `${pickUnique(openers,"opener")}
+
+Happy Birthday, ${n}!
+${pickUnique(ageLines,"age")(a)}
+${pickUnique(hobbyLines,"hobby")(h)}
+${pickUnique(relationshipLines[r],"relation")}
+
+${pickUnique(closers,"closer")}`;
+}
+
+function stopAllAudio(){
+  document.querySelectorAll("audio").forEach(a=>{a.pause();a.currentTime=0});
+}
+
+form.onsubmit=e=>{
+  e.preventDefault();
+  const n=nameInput.value.trim(),a=ageInput.value.trim(),
+        h=hobbyInput.value.trim(),r=relInput.value;
+  const msg=buildMessage(n,a,h,r);
+
+  const card=document.createElement("div");
+  card.className="card";
+  card.innerHTML=`
+    <img src="20190921_BKP507.avif">
+    <button class="open-btn">Tap to open</button>
+    <div class="message">
+      <strong>The One About ${n}</strong>
+      <p>${msg.replace(/\n/g,"<br>")}</p>
+      <audio class="audio-player" controls>
+        <source src="Ill Be There For You Friends Theme Song.mp3">
+      </audio>
+      <button class="copy">📋 Copy</button>
+    </div>
+  `;
+
+  const audio=card.querySelector("audio");
+  card.querySelector(".open-btn").onclick=()=>{
+    stopAllAudio();
+    document.querySelectorAll(".card").forEach(c=>c.classList.remove("open"));
+    card.classList.add("open");
+    audio.currentTime=0;
+    audio.play().catch(()=>{});
+  };
+
+  card.querySelector(".copy").onclick=e=>{
+    navigator.clipboard.writeText(msg);
+    e.target.textContent="✅ Copied";
+    setTimeout(()=>e.target.textContent="📋 Copy",1200);
+  };
+
+  cards.prepend(card);
+  form.reset();
+};
+
+lucky.onclick=()=>{
+  nameInput.value=rand(["Joey","Monica","Chandler","Phoebe","Rachel","Ross"]);
+  ageInput.value=rand([13,18,21,25,30]);
+  hobbyInput.value=rand(["pizza","coffee","sarcasm","fashion","music"]);
+  relInput.value=rand(["friend","sibling","parent","spouse","coworker"]);
+};
+</script>
+
+</body>
+</html>
